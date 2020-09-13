@@ -1,0 +1,58 @@
+package com.hiepnt.basemvp.utils
+
+import android.content.Context
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
+import java.security.cert.CertificateException
+import java.util.concurrent.TimeUnit
+import javax.net.ssl.SSLContext
+import javax.net.ssl.TrustManager
+import javax.net.ssl.X509TrustManager
+
+
+class SelfSigningClientBuilder {
+
+    companion object {
+        fun getUnsafeOkHttpClient(context: Context): OkHttpClient.Builder {
+            try {
+                // Create a trust manager that does not validate certificate chains
+                val trustAllCerts = arrayOf<TrustManager>(object : X509TrustManager {
+                    @Throws(CertificateException::class)
+                    override fun checkClientTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) {
+                    }
+
+                    @Throws(CertificateException::class)
+                    override fun checkServerTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) {
+                    }
+
+                    override fun getAcceptedIssuers(): Array<java.security.cert.X509Certificate> {
+                        return arrayOf()
+                    }
+                })
+
+                // Install the all-trusting trust manager
+                val sslContext = SSLContext.getInstance("SSL")
+                sslContext.init(null, trustAllCerts, java.security.SecureRandom())
+                // Create an ssl socket factory with our all-trusting manager
+                val sslSocketFactory = sslContext.socketFactory
+
+                var logging = HttpLoggingInterceptor()
+                logging!!.setLevel(HttpLoggingInterceptor.Level.BODY)
+                val builder = OkHttpClient.Builder()
+                builder.addInterceptor(logging)
+//                builder.addInterceptor(HeaderInterceptor(context))
+//                builder.addInterceptor(AuthInterceptor(context))
+                builder.sslSocketFactory(sslSocketFactory, trustAllCerts[0] as X509TrustManager)
+                builder.connectTimeout(120, TimeUnit.SECONDS)
+                builder.writeTimeout(120, TimeUnit.SECONDS)
+                builder.readTimeout(120, TimeUnit.SECONDS)
+                builder.callTimeout(120, TimeUnit.SECONDS)
+//                builder.hostnameVerifier { _, _ -> true }
+
+                return builder
+            } catch (e: Exception) {
+                throw RuntimeException(e)
+            }
+        }
+    }
+}
