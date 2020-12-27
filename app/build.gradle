@@ -62,4 +62,5 @@ dependencies {
     implementation 'com.squareup.retrofit2:converter-gson:2.1.0'
 
     implementation 'com.github.takuji31.Koreference:koreference:2.0.0'
+    implementation 'com.intuit.sdp:sdp-android:1.0.6'
 }

@@ -25,4 +25,8 @@ abstract class BaseActivity<P : BasePresenter<BaseView>> : BaseView, AppCompatAc
         return this
     }
 
+    override fun onBackPressed() {
+        super.onBackPressed()
+    }
+
 }
